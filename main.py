@@ -2,6 +2,7 @@
 # Includes repeat functionality for consistent reminders.
 
 import datetime
+import time
 from plyer import notification
 import threading
 
@@ -58,7 +59,7 @@ def alarm_input():  # Repeat less code here.
         else:
             print("Please enter AM or PM.")
     while not valid_repeat:
-        repeat = input("How often would you like this alarm to repeat? Please enter a number or 'i' for indefinitely: ")
+        repeat = input("How often would you like this alarm to repeat? ")
         if repeat.lower == "i":
             valid_repeat = True
         else:
@@ -77,7 +78,7 @@ def alarm_input():  # Repeat less code here.
             valid_repeat_int = True
         except ValueError:
             print("Please enter a valid number.")
-    return (hour, minute, repeat, repeat_int)
+    return hour, minute, repeat, repeat_int
 
 
 def alarm_init(hour, minute, repeat, repeat_int):
@@ -105,10 +106,19 @@ def alarm_init(hour, minute, repeat, repeat_int):
     timeleft = alarm - now
     timer = threading.Timer(timeleft.total_seconds(), message)
     timer.start()
+    time.sleep(timeleft.total_seconds())
+    while repeat > 0 or repeat == "i":
+        timeleft = datetime.timedelta(minutes=repeat_int)
+        timer = threading.Timer(timeleft.total_seconds(), message)
+        timer.start()
+        time.sleep(timeleft.total_seconds())
+        if repeat != "i":
+            repeat -= 1
 
 
 def main():
     (hour, minute, repeat, repeat_int) = alarm_input()
     alarm_init(hour, minute, repeat, repeat_int)
+
 
 main()
