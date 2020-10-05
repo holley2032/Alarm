@@ -2,7 +2,8 @@
 # Includes repeat functionality for consistent reminders.
 
 import datetime
-import plyer
+from plyer import notification
+import threading
 
 
 class Alarm:
@@ -12,11 +13,18 @@ class Alarm:
         self.repeat_interval = repeat_interval
 
 
-def alarm_init():
+def message():
+    title = "Alarm"
+    text = "Your alarm has occurred."
+    notification.notify(title=title, message=text)
+
+
+def alarm_input():  # Repeat less code here.
     valid_hour = False
     valid_minute = False
     valid_meridian = False
     valid_repeat = False
+    valid_repeat_int = False
     while not valid_hour:
         hour = input("What hour would you like the alarm set to: ")
         try:
@@ -57,9 +65,50 @@ def alarm_init():
             try:
                 repeat = int(repeat)
                 valid_repeat = True
+                if repeat == 0:
+                    repeat_int = 0
+                    valid_repeat_int = True
             except ValueError:
                 print("Please enter a valid number or 'i'.")
+    while not valid_repeat_int:
+        repeat_int = input("What interval of time would you like between alarms? ")
+        try:
+            repeat_int = int(repeat_int)
+            valid_repeat_int = True
+        except ValueError:
+            print("Please enter a valid number.")
+    return (hour, minute, repeat, repeat_int)
+
+
+def alarm_init(hour, minute, repeat, repeat_int):
+    now = datetime.datetime.now()
+    today = True
+    if hour < now.hour:
+        today = False
+    if hour == now.hour:
+        if minute <= now.minute:
+            today = False
+    day = now.day
+    if not today:
+        day += 1
+    try:
+        alarm = datetime.datetime(now.year, now.month, day, hour = hour, minute = minute)
+    except ValueError:
+        day = 1
+        month = now.month + 1
+        try:
+            alarm = datetime.datetime(now.year, month, day, hour = hour, minute = minute)
+        except ValueError:
+            month = 1
+            year = now.year + 1
+            alarm = datetime.datetime(year, month, day, hour=hour, minute=minute)
+    timeleft = alarm - now
+    timer = threading.Timer(timeleft.total_seconds(), message)
+    timer.start()
 
 
 def main():
-    pass
+    (hour, minute, repeat, repeat_int) = alarm_input()
+    alarm_init(hour, minute, repeat, repeat_int)
+
+main()
